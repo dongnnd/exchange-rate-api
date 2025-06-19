@@ -6,4 +6,5 @@ module.exports = {
   restoreMocks: true,
   coveragePathIgnorePatterns: ['node_modules', 'src/config', 'src/app.js', 'tests'],
   coverageReporters: ['text', 'lcov', 'clover', 'html'],
+  transformIgnorePatterns: ['node_modules/(?!(axios)/)'],
 };

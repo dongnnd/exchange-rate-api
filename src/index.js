@@ -2,12 +2,19 @@ const mongoose = require('mongoose');
 const app = require('./app');
 const config = require('./config/config');
 const logger = require('./config/logger');
+const cronService = require('./services/cron.service');
 
 let server;
 mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   logger.info('Connected to MongoDB');
   server = app.listen(config.port, () => {
     logger.info(`Listening to port ${config.port}`);
+
+    // Start cron jobs in production and development mode (not in test)
+    if (config.env !== 'test') {
+      cronService.startAllJobs();
+      logger.info(`Cron jobs started in ${config.env} mode`);
+    }
   });
 });
 
