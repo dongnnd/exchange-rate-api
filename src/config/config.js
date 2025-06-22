@@ -8,7 +8,12 @@ const envVarsSchema = Joi.object()
   .keys({
     NODE_ENV: Joi.string().valid('production', 'development', 'test').required(),
     PORT: Joi.number().default(3000),
-    MONGODB_URL: Joi.string().required().description('Mongo DB url'),
+    POSTGRES_URL: Joi.string().required().description('PostgreSQL connection URL'),
+    POSTGRES_HOST: Joi.string().description('PostgreSQL host'),
+    POSTGRES_PORT: Joi.number().default(5432).description('PostgreSQL port'),
+    POSTGRES_DATABASE: Joi.string().description('PostgreSQL database name'),
+    POSTGRES_USERNAME: Joi.string().description('PostgreSQL username'),
+    POSTGRES_PASSWORD: Joi.string().description('PostgreSQL password'),
     JWT_SECRET: Joi.string().required().description('JWT secret key'),
     JWT_ACCESS_EXPIRATION_MINUTES: Joi.number().default(30).description('minutes after which access tokens expire'),
     JWT_REFRESH_EXPIRATION_DAYS: Joi.number().default(30).description('days after which refresh tokens expire'),
@@ -35,13 +40,13 @@ if (error) {
 module.exports = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
-  mongoose: {
-    url: envVars.MONGODB_URL + (envVars.NODE_ENV === 'test' ? '-test' : ''),
-    options: {
-      useCreateIndex: true,
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    },
+  postgres: {
+    url: envVars.POSTGRES_URL,
+    host: envVars.POSTGRES_HOST,
+    port: envVars.POSTGRES_PORT,
+    database: envVars.POSTGRES_DATABASE,
+    username: envVars.POSTGRES_USERNAME,
+    password: envVars.POSTGRES_PASSWORD,
   },
   jwt: {
     secret: envVars.JWT_SECRET,

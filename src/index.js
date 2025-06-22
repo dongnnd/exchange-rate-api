@@ -1,22 +1,27 @@
-const mongoose = require('mongoose');
+const sequelize = require('./config/database');
 const app = require('./app');
 const config = require('./config/config');
 const logger = require('./config/logger');
 const cronService = require('./services/cron.service');
 
 let server;
-mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
-  logger.info('Connected to MongoDB');
-  server = app.listen(config.port, () => {
-    logger.info(`Listening to port ${config.port}`);
 
-    // Start cron jobs in production and development mode (not in test)
-    if (config.env !== 'test') {
-      cronService.startAllJobs();
-      logger.info(`Cron jobs started in ${config.env} mode`);
-    }
+sequelize
+  .authenticate()
+  .then(() => {
+    logger.info('Connected to PostgreSQL');
+    server = app.listen(config.port, () => {
+      logger.info(`Listening to port ${config.port}`);
+      if (config.env !== 'test') {
+        cronService.startAllJobs();
+        logger.info(`Cron jobs started in ${config.env} mode`);
+      }
+    });
+  })
+  .catch((err) => {
+    logger.error('Unable to connect to PostgreSQL:', err);
+    process.exit(1);
   });
-});
 
 const exitHandler = () => {
   if (server) {

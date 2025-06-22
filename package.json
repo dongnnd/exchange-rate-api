@@ -13,6 +13,7 @@
   "scripts": {
     "start": "pm2 start ecosystem.config.json --no-daemon",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
+    "dev:debug": "cross-env NODE_ENV=development nodemon --inspect=0.0.0.0:9229 src/index.js",
     "test": "jest -i --colors --verbose --detectOpenHandles",
     "test:watch": "jest -i --watchAll",
     "coverage": "jest -i --coverage",
@@ -24,6 +25,10 @@
     "docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up",
     "docker:dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up",
     "docker:test": "docker-compose -f docker-compose.yml -f docker-compose.test.yml up",
+    "migrate:to-postgres": "node src/scripts/migrate-to-postgres.js",
+    "init:postgres": "node src/scripts/init-postgres.js",
+    "reset:postgres": "node src/scripts/reset-postgres.js",
+    "seed:currencies": "node src/scripts/seed-currencies.js",
     "prepare": "husky install"
   },
   "keywords": [
@@ -69,7 +74,10 @@
     "nodemailer": "^6.3.1",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
+    "pg": "^8.16.2",
     "pm2": "^5.1.0",
+    "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.3",
     "swagger-jsdoc": "^6.0.8",
     "swagger-ui-express": "^4.1.6",
     "validator": "^13.0.0",

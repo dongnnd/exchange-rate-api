@@ -1,25 +1,26 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const { exchangeRateService, crawlerService } = require('../services');
+const databaseAdapter = require('../services/adapter');
 const CrawlerService = require('../services/crawler.service');
 
 const getLatestRate = catchAsync(async (req, res) => {
   const { fromCurrency, toCurrency } = req.params;
-  const exchangeRate = await exchangeRateService.getLatestRate(fromCurrency, toCurrency);
+  const exchangeRate = await databaseAdapter.getLatestRate(fromCurrency, toCurrency);
   res.status(httpStatus.OK).send(exchangeRate);
 });
 
 const getRateHistory = catchAsync(async (req, res) => {
   const { fromCurrency, toCurrency } = req.params;
   const { limit } = req.query;
-  const exchangeRates = await exchangeRateService.getRateHistory(fromCurrency, toCurrency, limit);
+  const exchangeRates = await databaseAdapter.getRateHistory(fromCurrency, toCurrency, limit);
   res.status(httpStatus.OK).send(exchangeRates);
 });
 
 const convertAmount = catchAsync(async (req, res) => {
   const { fromCurrency, toCurrency } = req.params;
   const { amount } = req.body;
-  const result = await exchangeRateService.convertAmount(fromCurrency, toCurrency, amount);
+  const result = await databaseAdapter.convertAmount(fromCurrency, toCurrency, amount);
   res.status(httpStatus.OK).send(result);
 });
 
@@ -64,7 +65,12 @@ const crawlFromVietnameseBanks = catchAsync(async (req, res) => {
 });
 
 const getExchangeRates = catchAsync(async (req, res) => {
-  const result = await exchangeRateService.queryExchangeRates(req.query);
+  const result = await databaseAdapter.queryExchangeRates(req.query, {
+    limit: parseInt(req.query.limit, 10) || 10,
+    page: parseInt(req.query.page, 10) || 1,
+    sortBy: req.query.sortBy,
+    sortOrder: req.query.sortOrder,
+  });
   res.status(httpStatus.OK).json(result);
 });
 
@@ -74,17 +80,17 @@ const getExchangeRate = catchAsync(async (req, res) => {
 });
 
 const createExchangeRate = catchAsync(async (req, res) => {
-  const exchangeRate = await exchangeRateService.createExchangeRate(req.body);
+  const exchangeRate = await databaseAdapter.createExchangeRate(req.body);
   res.status(httpStatus.CREATED).json(exchangeRate);
 });
 
 const updateExchangeRate = catchAsync(async (req, res) => {
-  const exchangeRate = await exchangeRateService.updateExchangeRateById(req.params.exchangeRateId, req.body);
+  const exchangeRate = await databaseAdapter.updateExchangeRateById(req.params.exchangeRateId, req.body);
   res.status(httpStatus.OK).json(exchangeRate);
 });
 
 const deleteExchangeRate = catchAsync(async (req, res) => {
-  await exchangeRateService.deleteExchangeRateById(req.params.exchangeRateId);
+  await databaseAdapter.deleteExchangeRateById(req.params.exchangeRateId);
   res.status(httpStatus.NO_CONTENT).end();
 });
 

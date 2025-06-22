@@ -1,7 +1,10 @@
 const axios = require('axios');
+const { Op } = require('sequelize');
 const logger = require('../config/logger');
-const ExchangeRate = require('../models/exchangeRate.model');
-const Currency = require('../models/currency.model');
+const { Currency, ExchangeRate } = require('../models/sequelize');
+
+// eslint-disable-next-line no-unused-vars
+const usePostgres = process.env.USE_POSTGRES === 'true';
 
 /**
  * Crawl exchange rates from multiple sources
@@ -11,34 +14,33 @@ class CrawlerService {
    * Upsert currency (insert if not exists, update if exists)
    */
   static async upsertCurrency({ code, name, symbol }) {
-    return Currency.findOneAndUpdate(
-      { code: code.toUpperCase() },
-      { code: code.toUpperCase(), name, symbol, isActive: true },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    const [currency] = await Currency.findOrCreate({
+      where: { code: code.toUpperCase() },
+      defaults: { code: code.toUpperCase(), name, symbol, isActive: true },
+    });
+    return currency;
   }
 
   /**
    * Upsert exchange rate (insert if not exists, update if exists)
    */
   static async upsertExchangeRate({ fromCurrency, toCurrency, rate, source, timestamp }) {
-    return ExchangeRate.findOneAndUpdate(
-      {
-        fromCurrency,
-        toCurrency,
+    const [exchangeRate] = await ExchangeRate.findOrCreate({
+      where: {
+        fromCurrencyId: fromCurrency,
+        toCurrencyId: toCurrency,
         source,
-        timestamp,
       },
-      {
-        fromCurrency,
-        toCurrency,
+      defaults: {
+        fromCurrencyId: fromCurrency,
+        toCurrencyId: toCurrency,
         rate,
         source,
         timestamp,
         isActive: true,
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    });
+    return exchangeRate;
   }
 
   /**
@@ -59,7 +61,7 @@ class CrawlerService {
       const processedRates = await Promise.all(
         rateEntries.map(async ([currencyCode, rate]) => {
           // Ensure currency exists in database
-          let currency = await Currency.findOne({ code: currencyCode });
+          let currency = await Currency.findOne({ where: { code: currencyCode } });
           if (!currency) {
             currency = await Currency.create({
               code: currencyCode,
@@ -69,7 +71,7 @@ class CrawlerService {
           }
 
           // Get USD currency
-          let usdCurrency = await Currency.findOne({ code: 'USD' });
+          let usdCurrency = await Currency.findOne({ where: { code: 'USD' } });
           if (!usdCurrency) {
             usdCurrency = await Currency.create({
               code: 'USD',
@@ -80,8 +82,8 @@ class CrawlerService {
 
           // Save exchange rate
           const exchangeRate = await ExchangeRate.create({
-            fromCurrency: usdCurrency._id,
-            toCurrency: currency._id,
+            fromCurrencyId: usdCurrency.id,
+            toCurrencyId: currency.id,
             rate,
             source: 'exchangerate-api',
             timestamp,
@@ -127,7 +129,7 @@ class CrawlerService {
       const processedRates = await Promise.all(
         rateEntries.map(async ([currencyCode, rate]) => {
           // Ensure currency exists
-          let currency = await Currency.findOne({ code: currencyCode });
+          let currency = await Currency.findOne({ where: { code: currencyCode } });
           if (!currency) {
             currency = await Currency.create({
               code: currencyCode,
@@ -137,7 +139,7 @@ class CrawlerService {
           }
 
           // Get EUR currency
-          let eurCurrency = await Currency.findOne({ code: 'EUR' });
+          let eurCurrency = await Currency.findOne({ where: { code: 'EUR' } });
           if (!eurCurrency) {
             eurCurrency = await Currency.create({
               code: 'EUR',
@@ -148,8 +150,8 @@ class CrawlerService {
 
           // Save exchange rate
           const exchangeRate = await ExchangeRate.create({
-            fromCurrency: eurCurrency._id,
-            toCurrency: currency._id,
+            fromCurrencyId: eurCurrency.id,
+            toCurrencyId: currency.id,
             rate,
             source: 'fixer-api',
             timestamp,
@@ -186,7 +188,7 @@ class CrawlerService {
       const processedRates = await Promise.all(
         rates.map(async (rate) => {
           // Ensure currencies exist
-          let fromCurrency = await Currency.findOne({ code: rate.fromCurrency });
+          let fromCurrency = await Currency.findOne({ where: { code: rate.fromCurrency } });
           if (!fromCurrency) {
             fromCurrency = await Currency.create({
               code: rate.fromCurrency,
@@ -195,7 +197,7 @@ class CrawlerService {
             });
           }
 
-          let toCurrency = await Currency.findOne({ code: rate.toCurrency });
+          let toCurrency = await Currency.findOne({ where: { code: rate.toCurrency } });
           if (!toCurrency) {
             toCurrency = await Currency.create({
               code: rate.toCurrency,
@@ -206,8 +208,8 @@ class CrawlerService {
 
           // Save exchange rate
           const exchangeRate = await ExchangeRate.create({
-            fromCurrency: fromCurrency._id,
-            toCurrency: toCurrency._id,
+            fromCurrencyId: fromCurrency.id,
+            toCurrencyId: toCurrency.id,
             rate: rate.rate,
             source: 'vietcombank',
             timestamp: new Date(),
@@ -296,9 +298,11 @@ class CrawlerService {
   static async crawlInBatches(baseCurrency = 'USD', batchSize = 10, delayMs = 1000) {
     try {
       // Get all active currencies except base currency
-      const currencies = await Currency.find({
-        isActive: true,
-        code: { $ne: baseCurrency.toUpperCase() },
+      const currencies = await Currency.findAll({
+        where: {
+          isActive: true,
+          code: { $ne: baseCurrency.toUpperCase() },
+        },
       });
 
       const batches = [];
@@ -342,52 +346,63 @@ class CrawlerService {
   /**
    * Crawl single exchange rate
    */
-  static async crawlSingleRate(fromCurrencyCode, toCurrencyCode) {
+  static async crawlSingleRate(baseCurrency) {
     try {
-      const response = await axios.get(`https://api.exchangerate-api.com/v4/latest/${fromCurrencyCode}`);
-      // eslint-disable-next-line camelcase
-      const { rates, time_last_updated } = response.data;
-      // eslint-disable-next-line camelcase
-      const timestamp = new Date(time_last_updated * 1000);
+      const response = await axios.get(`https://api.exchangerate.fun/latest?base=${baseCurrency.code.toUpperCase()}`);
+      const { rates, timestamp } = response.data;
+      const timesUpdate = new Date(timestamp * 1000);
 
-      if (!rates[toCurrencyCode]) {
-        throw new Error(`Rate not found for ${toCurrencyCode}`);
+      if (!rates || Object.keys(rates).length === 0) {
+        logger.error(`No rates found for ${baseCurrency.code}`);
+        return null;
       }
 
-      const rate = rates[toCurrencyCode];
+      // Tạo mảng data để insert đồng loạt
+      const exchangeRatesData = [];
 
-      // Ensure currencies exist
-      let fromCurrency = await Currency.findOne({ code: fromCurrencyCode.toUpperCase() });
-      if (!fromCurrency) {
-        fromCurrency = await Currency.create({
-          code: fromCurrencyCode.toUpperCase(),
-          name: fromCurrencyCode.toUpperCase(),
-          symbol: fromCurrencyCode.toUpperCase(),
+      // eslint-disable-next-line no-restricted-syntax
+      for (const [currencyCode, rateValue] of Object.entries(rates)) {
+        // eslint-disable-next-line no-await-in-loop
+        const toCurrency = await Currency.findOne({ where: { code: currencyCode.toUpperCase() } });
+        if (!toCurrency) {
+          logger.warn(`Currency not found: ${currencyCode}`);
+          // eslint-disable-next-line no-continue
+          continue;
+        }
+
+        exchangeRatesData.push({
+          from_currency_id: baseCurrency.id,
+          to_currency_id: toCurrency.id,
+          source: 'exchangerate-api',
+          rate: rateValue,
+          timestamp: timesUpdate,
+          isActive: true,
         });
       }
 
-      let toCurrency = await Currency.findOne({ code: toCurrencyCode.toUpperCase() });
-      if (!toCurrency) {
-        toCurrency = await Currency.create({
-          code: toCurrencyCode.toUpperCase(),
-          name: toCurrencyCode.toUpperCase(),
-          symbol: toCurrencyCode.toUpperCase(),
-        });
+      // Insert đồng loạt tất cả data
+      if (exchangeRatesData.length > 0) {
+        try {
+          // Sử dụng bulkCreate với updateOnDuplicate để thực hiện upsert
+          const result = await ExchangeRate.bulkCreate(exchangeRatesData, {
+            updateOnDuplicate: ['rate', 'source', 'timestamp', 'isActive', 'updated_at'],
+            fields: ['from_currency_id', 'to_currency_id', 'source', 'rate', 'timestamp', 'isActive'],
+            // Chỉ định conflict fields dựa trên unique constraint
+            conflictFields: ['from_currency_id', 'to_currency_id'],
+          });
+
+          logger.info(`Successfully bulk upserted ${result.length} exchange rates for ${baseCurrency.code}`);
+          return result;
+        } catch (error) {
+          logger.error(`Error bulk upserting exchange rates for ${baseCurrency.code}:`, error);
+          throw error;
+        }
+      } else {
+        logger.warn(`No valid exchange rates to insert for ${baseCurrency.code}`);
+        return [];
       }
-
-      // Save exchange rate
-      const exchangeRate = await ExchangeRate.create({
-        fromCurrency: fromCurrency._id,
-        toCurrency: toCurrency._id,
-        rate,
-        source: 'exchangerate-api',
-        timestamp,
-      });
-
-      logger.info(`Crawled rate: ${fromCurrencyCode} -> ${toCurrencyCode} = ${rate}`);
-      return exchangeRate;
     } catch (error) {
-      logger.error(`Error crawling single rate ${fromCurrencyCode} -> ${toCurrencyCode}:`, error);
+      logger.error(`Error crawling single rate ${baseCurrency.code}:`, error);
       throw error;
     }
   }
@@ -399,25 +414,24 @@ class CrawlerService {
     try {
       const cutoffTime = new Date(Date.now() - maxAgeMinutes * 60 * 1000);
 
-      // Get currencies that need updating
-      const currenciesToUpdate = await Currency.aggregate([
-        {
-          $lookup: {
-            from: 'exchangerates',
-            localField: '_id',
-            foreignField: 'toCurrency',
-            as: 'latestRate',
-          },
+      // Get currencies that need updating using Sequelize
+      const currenciesToUpdate = await Currency.findAll({
+        where: {
+          isActive: true,
+          code: { [Op.ne]: baseCurrency.toUpperCase() },
         },
-        {
-          $match: {
-            isActive: true,
-            code: { $ne: baseCurrency.toUpperCase() },
-            $or: [{ latestRate: { $size: 0 } }, { 'latestRate.timestamp': { $lt: cutoffTime } }],
+        include: [
+          {
+            model: ExchangeRate,
+            as: 'toRates',
+            where: {
+              timestamp: { [Op.lt]: cutoffTime },
+            },
+            required: false,
           },
-        },
-        { $limit: 20 }, // Limit to 20 currencies per run
-      ]);
+        ],
+        limit: 20, // Limit to 20 currencies per run
+      });
 
       if (currenciesToUpdate.length === 0) {
         logger.info('All exchange rates are up to date');
@@ -429,7 +443,7 @@ class CrawlerService {
       const results = await Promise.all(
         currenciesToUpdate.map(async (currency) => {
           try {
-            return await this.crawlSingleRate(baseCurrency, currency.code);
+            return await this.crawlSingleRate(currency);
           } catch (error) {
             logger.error(`Error updating rate for ${currency.code}:`, error);
             return null;
@@ -447,26 +461,32 @@ class CrawlerService {
   /**
    * Crawl priority currencies first (most commonly used)
    */
-  static async crawlPriorityCurrencies() {
-    const priorityCurrencies = ['VND', 'EUR', 'JPY', 'GBP', 'CNY', 'KRW', 'SGD', 'THB'];
+  static async crawlAllCurrencies() {
+    const priorityCurrencies = await Currency.findAll({
+      where: {
+        isActive: true,
+      },
+    });
     const results = [];
 
     // eslint-disable-next-line no-restricted-syntax
-    for (const currencyCode of priorityCurrencies) {
+    for (const currency of priorityCurrencies) {
       try {
         // eslint-disable-next-line no-await-in-loop
-        const result = await this.crawlSingleRate('USD', currencyCode);
+        const result = await this.crawlSingleRate(currency);
         results.push(result);
         // Small delay between requests
         // eslint-disable-next-line no-await-in-loop
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
-        logger.error(`Error crawling priority currency ${currencyCode}:`, error);
+        logger.error(`Error crawling priority currency ${currency.code}:`, error);
       }
     }
+
+    logger.info(`Crawled ${results.length} priority currencies`);
 
     return results;
   }
 }
 
-module.exports = new CrawlerService();
+module.exports = CrawlerService;
