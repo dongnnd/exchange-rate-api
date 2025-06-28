@@ -40,15 +40,14 @@ class CronService {
    */
   // eslint-disable-next-line class-methods-use-this
   startAllJobs() {
-    crawlerService.crawlAllCurrencies();
-    // try {
-    //   logger.info('Starting all cron jobs...');
-    //   // this.startAllCurrenciesJob();
-    //   logger.info('All cron jobs started successfully');
-    // } catch (error) {
-    //   logger.error('Error starting cron jobs:', error);
-    //   throw error;
-    // }
+    try {
+      logger.info('Starting all cron jobs...');
+      this.startAllCurrenciesJob();
+      logger.info('All cron jobs started successfully');
+    } catch (error) {
+      logger.error('Error starting cron jobs:', error);
+      throw error;
+    }
   }
 }
 

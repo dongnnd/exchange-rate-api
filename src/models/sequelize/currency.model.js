@@ -31,6 +31,11 @@ const Currency = sequelize.define(
       type: DataTypes.BOOLEAN,
       default: true,
     },
+    flag: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      trim: true,
+    },
   },
   {
     tableName: 'currencies',

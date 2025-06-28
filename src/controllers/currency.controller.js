@@ -3,7 +3,7 @@ const catchAsync = require('../utils/catchAsync');
 const { currencyService } = require('../services');
 
 const getCurrencies = catchAsync(async (req, res) => {
-  const currencies = await currencyService.getAllCurrencies();
+  const currencies = await currencyService.getCurrencies();
   res.status(httpStatus.OK).send(currencies);
 });
 

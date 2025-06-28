@@ -15,14 +15,10 @@ const getLatestRate = async (fromCurrencyCode, toCurrencyCode) => {
 
   const exchangeRate = await ExchangeRate.findOne({
     where: {
-      fromCurrencyId: fromCurrency.id,
-      toCurrencyId: toCurrency.id,
+      from_currency_id: fromCurrency.id,
+      to_currency_id: toCurrency.id,
       isActive: true,
     },
-    include: [
-      { model: Currency, as: 'fromCurrency' },
-      { model: Currency, as: 'toCurrency' },
-    ],
     order: [['timestamp', 'DESC']],
   });
 
@@ -30,7 +26,11 @@ const getLatestRate = async (fromCurrencyCode, toCurrencyCode) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Exchange rate not found');
   }
 
-  return exchangeRate;
+  return {
+    rate: parseFloat(exchangeRate.rate),
+    from_currency_code: fromCurrency.code,
+    to_currency_code: toCurrency.code,
+  };
 };
 
 /**
@@ -46,19 +46,20 @@ const getRateHistory = async (fromCurrencyCode, toCurrencyCode, limit = 10) => {
 
   const exchangeRates = await ExchangeRate.findAll({
     where: {
-      fromCurrencyId: fromCurrency.id,
-      toCurrencyId: toCurrency.id,
+      from_currency_id: fromCurrency.id,
+      to_currency_id: toCurrency.id,
       isActive: true,
     },
-    include: [
-      { model: Currency, as: 'fromCurrency' },
-      { model: Currency, as: 'toCurrency' },
-    ],
     order: [['timestamp', 'DESC']],
     limit: parseInt(limit, 10),
   });
 
-  return exchangeRates;
+  // Optionally, you can add currency info to each rate if needed
+  return exchangeRates.map((rate) => ({
+    ...rate.toJSON(),
+    fromCurrency,
+    toCurrency,
+  }));
 };
 
 /**
@@ -90,8 +91,8 @@ const createExchangeRate = async (exchangeRateBody) => {
   }
 
   const exchangeRate = await ExchangeRate.create({
-    fromCurrencyId: fromCurrency.id,
-    toCurrencyId: toCurrency.id,
+    from_currency_id: fromCurrency.id,
+    to_currency_id: toCurrency.id,
     rate: exchangeRateBody.rate,
     source: exchangeRateBody.source,
     timestamp: exchangeRateBody.timestamp || new Date(),
@@ -138,17 +139,24 @@ const queryExchangeRates = async (filter, options) => {
 
   const exchangeRates = await ExchangeRate.findAndCountAll({
     where: whereClause,
-    include: [
-      { model: Currency, as: 'fromCurrency' },
-      { model: Currency, as: 'toCurrency' },
-    ],
     order: sortBy && sortOrder ? [[sortBy, sortOrder]] : [['createdAt', 'DESC']],
     limit,
     offset: (page - 1) * limit,
   });
 
+  // Optionally, you can add currency info to each rate if needed
   return {
-    results: exchangeRates.rows,
+    results: await Promise.all(
+      exchangeRates.rows.map(async (rate) => {
+        const fromCurrency = await Currency.findByPk(rate.from_currency_id);
+        const toCurrency = await Currency.findByPk(rate.to_currency_id);
+        return {
+          ...rate.toJSON(),
+          fromCurrency,
+          toCurrency,
+        };
+      })
+    ),
     page,
     limit,
     totalPages: Math.ceil(exchangeRates.count / limit),
