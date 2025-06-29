@@ -17,10 +17,17 @@ const Currency = sequelize.define(
         len: [3, 3],
       },
     },
-    name: {
+    name_vi: {
       type: DataTypes.STRING,
       allowNull: false,
       trim: true,
+      comment: 'Vietnamese name of the currency',
+    },
+    name_en: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      trim: true,
+      comment: 'English name of the currency',
     },
     symbol: {
       type: DataTypes.STRING(5),

@@ -29,6 +29,7 @@
     "init:postgres": "node src/scripts/init-postgres.js",
     "reset:postgres": "node src/scripts/reset-postgres.js",
     "seed:currencies": "node src/scripts/seed-currencies.js",
+    "migrate:update-currency-multilingual": "node src/migrations/update_currency_multilingual.js",
     "prepare": "husky install"
   },
   "keywords": [

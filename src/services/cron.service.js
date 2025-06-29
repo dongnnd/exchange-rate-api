@@ -13,7 +13,7 @@ class CronService {
   /**
    * Start priority currencies crawl job (every 5 minutes)
    */
-  startAllCurrenciesJob() {
+  async startAllCurrenciesJob() {
     const job = cron.schedule(
       '*/30 * * * *',
       async () => {

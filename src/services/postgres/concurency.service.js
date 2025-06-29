@@ -5,6 +5,8 @@ const getCurrencies = async () => {
 
   return currencies.map((currency) => ({
     code: currency.code,
+    name_vi: currency.name_vi,
+    name_en: currency.name_en,
     flag: currency.flag,
   }));
 };
