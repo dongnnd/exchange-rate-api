@@ -14,9 +14,17 @@
             "config": {
                 "includeFiles": "node_modules/pg/**"
             }
+        },
+        {
+            "src": "api/simple-test.js",
+            "use": "@vercel/node@3.0.0"
         }
     ],
     "routes": [
+        {
+            "src": "/api/simple-test",
+            "dest": "/api/simple-test.js"
+        },
         {
             "src": "/(.*)",
             "dest": "/api/index.js"
