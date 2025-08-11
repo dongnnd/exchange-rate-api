@@ -25,6 +25,10 @@
             "config": {
                 "includeFiles": "node_modules/pg/**"
             }
+        },
+        {
+            "src": "api/config-test.js",
+            "use": "@vercel/node@3.0.0"
         }
     ],
     "routes": [
@@ -35,6 +39,10 @@
         {
             "src": "/api/db-test",
             "dest": "/api/db-test.js"
+        },
+        {
+            "src": "/api/config-test",
+            "dest": "/api/config-test.js"
         },
         {
             "src": "/(.*)",
