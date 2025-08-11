@@ -39,7 +39,7 @@ const Currency = sequelize.define(
       default: true,
     },
     flag: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
       trim: true,
     },

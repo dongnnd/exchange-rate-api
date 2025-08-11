@@ -16,7 +16,7 @@ const sequelize = new Sequelize(config.postgres.url, {
     freezeTableName: true,
   },
   dialectOptions: {
-    ssl: false,
+    ssl: process.env.NODE_ENV === 'production' ? { require: true, rejectUnauthorized: false } : false,
   },
 });
 
