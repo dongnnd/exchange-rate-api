@@ -119,3 +119,4 @@ ecosystem.config.js
 # API tokens (for security)
 api_token.txt
 token.txt
+.vercel
