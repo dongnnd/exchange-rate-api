@@ -9,10 +9,5 @@
       "src": "api/test.js",
       "use": "@vercel/node@3.0.0"
     }
-  ],
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  }
+  ]
 }
