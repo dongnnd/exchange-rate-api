@@ -13,6 +13,16 @@ module.exports = async (req, res) => {
       return;
     }
     
+    // Test route
+    if (req.url === '/api/test-main') {
+      return res.status(200).json({
+        message: 'Main API handler is working!',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        url: req.url
+      });
+    }
+    
     // Call the Express app
     return app(req, res);
   } catch (error) {
