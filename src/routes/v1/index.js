@@ -45,10 +45,9 @@ defaultRoutes.forEach((route) => {
 });
 
 /* istanbul ignore next */
-if (config.env === 'development') {
-  devRoutes.forEach((route) => {
-    router.use(route.path, route.route);
-  });
-}
+// Enable docs route in both development and production
+devRoutes.forEach((route) => {
+  router.use(route.path, route.route);
+});
 
 module.exports = router;
