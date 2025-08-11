@@ -1,38 +1,38 @@
 {
-  "version": 2,
-  "functions": {
-    "api/index.js": {
-      "runtime": "@vercel/node@3.0.0"
+    "version": 2,
+    "functions": {
+        "api/index.js": {
+            "runtime": "@vercel/node@3.0.0"
+        },
+        "api/test.js": {
+            "runtime": "@vercel/node@3.0.0"
+        },
+        "api/simple-test.js": {
+            "runtime": "@vercel/node@3.0.0"
+        },
+        "api/db-test.js": {
+            "runtime": "@vercel/node@3.0.0"
+        },
+        "api/config-test.js": {
+            "runtime": "@vercel/node@3.0.0"
+        }
     },
-    "api/test.js": {
-      "runtime": "@vercel/node@3.0.0"
-    },
-    "api/simple-test.js": {
-      "runtime": "@vercel/node@3.0.0"
-    },
-    "api/db-test.js": {
-      "runtime": "@vercel/node@3.0.0"
-    },
-    "api/config-test.js": {
-      "runtime": "@vercel/node@3.0.0"
-    }
-  },
-  "routes": [
-    {
-      "src": "/api/simple-test",
-      "dest": "/api/simple-test.js"
-    },
-    {
-      "src": "/api/db-test",
-      "dest": "/api/db-test.js"
-    },
-    {
-      "src": "/api/config-test",
-      "dest": "/api/config-test.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/index.js"
-    }
-  ]
+    "routes": [
+        {
+            "src": "/api/simple-test",
+            "dest": "/api/simple-test.js"
+        },
+        {
+            "src": "/api/db-test",
+            "dest": "/api/db-test.js"
+        },
+        {
+            "src": "/api/config-test",
+            "dest": "/api/config-test.js"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/api/index.js"
+        }
+    ]
 }
