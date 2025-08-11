@@ -3,11 +3,17 @@
     "builds": [
         {
             "src": "api/index.js",
-            "use": "@vercel/node@3.0.0"
+            "use": "@vercel/node@3.0.0",
+            "config": {
+                "includeFiles": "node_modules/pg/**"
+            }
         },
         {
             "src": "api/test.js",
-            "use": "@vercel/node@3.0.0"
+            "use": "@vercel/node@3.0.0",
+            "config": {
+                "includeFiles": "node_modules/pg/**"
+            }
         }
     ],
     "routes": [
@@ -15,13 +21,5 @@
             "src": "/(.*)",
             "dest": "/api/index.js"
         }
-    ],
-    "functions": {
-        "api/index.js": {
-            "includeFiles": "node_modules/pg/**"
-        },
-        "api/test.js": {
-            "includeFiles": "node_modules/pg/**"
-        }
-    }
+    ]
 }
