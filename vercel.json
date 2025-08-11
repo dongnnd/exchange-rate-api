@@ -18,12 +18,23 @@
         {
             "src": "api/simple-test.js",
             "use": "@vercel/node@3.0.0"
+        },
+        {
+            "src": "api/db-test.js",
+            "use": "@vercel/node@3.0.0",
+            "config": {
+                "includeFiles": "node_modules/pg/**"
+            }
         }
     ],
     "routes": [
         {
             "src": "/api/simple-test",
             "dest": "/api/simple-test.js"
+        },
+        {
+            "src": "/api/db-test",
+            "dest": "/api/db-test.js"
         },
         {
             "src": "/(.*)",
