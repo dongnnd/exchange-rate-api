@@ -120,3 +120,4 @@ ecosystem.config.js
 api_token.txt
 token.txt
 .vercel
+.env*.local

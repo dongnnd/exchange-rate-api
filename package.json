@@ -30,6 +30,7 @@
     "reset:postgres": "node src/scripts/reset-postgres.js",
     "seed:currencies": "node src/scripts/seed-currencies.js",
     "setup:neon": "node scripts/setup-neon-db.js",
+    "vercel-build": "npm install && npm run lint",
     "migrate:update-currency-multilingual": "node src/migrations/update_currency_multilingual.js",
     "prepare": "husky install"
   },
@@ -76,7 +77,8 @@
     "nodemailer": "^6.3.1",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
-    "pg": "8.16.2",
+    "pg": "8.11.3",
+    "pg-native": "^3.0.0",
     "pm2": "^5.1.0",
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.3",
