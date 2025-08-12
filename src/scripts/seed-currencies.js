@@ -785,10 +785,7 @@ async function seedCurrencies() {
     logger.info('Currency seeding finished.');
   } catch (error) {
     logger.error('Failed to seed currencies:', error);
-    process.exit(1);
-  } finally {
-    await sequelize.close();
-    logger.info('Database connection closed.');
+    throw error;
   }
 }
 
