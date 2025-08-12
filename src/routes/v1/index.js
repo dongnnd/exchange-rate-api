@@ -16,6 +16,10 @@ const defaultRoutes = [
     route: healthRoute,
   },
   {
+    path: '/seed',
+    route: seedRoute,
+  },
+  {
     path: '/auth',
     route: authRoute,
   },
