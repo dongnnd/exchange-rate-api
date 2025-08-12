@@ -6,7 +6,7 @@ const exchangeRateRoute = require('./exchangeRate.route');
 const cronRoute = require('./cron.route');
 const docsRoute = require('./docs.route');
 const healthRoute = require('./health.route');
-const config = require('../../config/config');
+const seedRoute = require('./seed.route');
 
 const router = express.Router();
 
