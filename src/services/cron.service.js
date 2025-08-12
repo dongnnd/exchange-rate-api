@@ -49,6 +49,71 @@ class CronService {
       throw error;
     }
   }
+
+  /**
+   * Trigger priority currencies crawl manually
+   */
+  async triggerPriorityCurrencies() {
+    try {
+      logger.info('Triggering priority currencies crawl manually');
+      const results = await crawlerService.crawlAllCurrencies();
+      logger.info(`Priority currencies crawl completed: ${results.length} rates updated`);
+      return results;
+    } catch (error) {
+      logger.error('Error in priority currencies crawl:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Trigger smart crawl manually
+   */
+  async triggerSmartCrawl(maxAgeMinutes = 30) {
+    try {
+      logger.info(`Triggering smart crawl with maxAgeMinutes: ${maxAgeMinutes}`);
+      const results = await crawlerService.crawlAllCurrencies();
+      logger.info(`Smart crawl completed: ${results.length} rates updated`);
+      return results;
+    } catch (error) {
+      logger.error('Error in smart crawl:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get job status
+   */
+  getJobStatus() {
+    const status = {};
+    for (const [jobName, job] of this.jobs) {
+      status[jobName] = {
+        running: job.running,
+        nextDate: job.nextDate(),
+      };
+    }
+    return status;
+  }
+
+  /**
+   * Stop specific job
+   */
+  stopJob(jobName) {
+    const job = this.jobs.get(jobName);
+    if (job) {
+      job.stop();
+      logger.info(`Job ${jobName} stopped`);
+    }
+  }
+
+  /**
+   * Stop all jobs
+   */
+  stopAllJobs() {
+    for (const [jobName, job] of this.jobs) {
+      job.stop();
+      logger.info(`Job ${jobName} stopped`);
+    }
+  }
 }
 
 module.exports = new CronService();
