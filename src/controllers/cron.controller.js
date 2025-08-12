@@ -43,11 +43,22 @@ const triggerSmartCrawl = catchAsync(async (req, res) => {
 
 const triggerAllJobs = catchAsync(async (req, res) => {
   try {
+    // Set timeout for cron-job.org (30 seconds)
+    const timeout = setTimeout(() => {
+      res.status(httpStatus.REQUEST_TIMEOUT).json({
+        message: 'Request timeout - cron jobs are running in background',
+        timestamp: new Date().toISOString(),
+      });
+    }, 25000); // 25 seconds timeout
+
     // Trigger priority currencies crawl
     const priorityResults = await cronService.triggerPriorityCurrencies();
     
     // Trigger smart crawl
     const smartResults = await cronService.triggerSmartCrawl(30);
+    
+    // Clear timeout if successful
+    clearTimeout(timeout);
     
     res.status(httpStatus.OK).json({
       message: 'All cron jobs triggered successfully',

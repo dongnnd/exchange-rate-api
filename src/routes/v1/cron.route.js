@@ -7,6 +7,15 @@ const router = express.Router();
 // External cron service endpoint (no auth required) - ĐẶT TRƯỚC middleware auth
 router.route('/trigger').get(cronController.triggerAllJobs);
 
+// Simple ping endpoint for cron-job.org testing
+router.route('/ping').get((req, res) => {
+  res.status(200).json({
+    message: 'Ping successful',
+    timestamp: new Date().toISOString(),
+    status: 'OK'
+  });
+});
+
 // All other routes require authentication
 router.use(auth('manageExchangeRates'));
 
