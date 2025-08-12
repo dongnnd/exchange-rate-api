@@ -30,8 +30,7 @@
     "reset:postgres": "node src/scripts/reset-postgres.js",
     "seed:currencies": "node src/scripts/seed-currencies.js",
     "setup:neon": "node scripts/setup-neon-db.js",
-    "migrate:update-currency-multilingual": "node src/migrations/update_currency_multilingual.js",
-    "prepare": "husky install"
+    "migrate:update-currency-multilingual": "node src/migrations/update_currency_multilingual.js"
   },
   "keywords": [
     "node",
