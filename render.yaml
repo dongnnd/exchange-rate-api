@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: node-express-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    autoDeploy: true
+
+databases:
+  - name: postgres-db
+    databaseName: nodeexpress
+    user: nodeexpress
+    plan: free

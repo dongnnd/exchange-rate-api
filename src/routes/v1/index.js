@@ -5,11 +5,16 @@ const currencyRoute = require('./currency.route');
 const exchangeRateRoute = require('./exchangeRate.route');
 const cronRoute = require('./cron.route');
 const docsRoute = require('./docs.route');
+const healthRoute = require('./health.route');
 const config = require('../../config/config');
 
 const router = express.Router();
 
 const defaultRoutes = [
+  {
+    path: '/health',
+    route: healthRoute,
+  },
   {
     path: '/auth',
     route: authRoute,
