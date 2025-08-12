@@ -4,7 +4,10 @@ const cronController = require('../../controllers/cron.controller');
 
 const router = express.Router();
 
-// All routes require authentication
+// External cron service endpoint (no auth required) - ĐẶT TRƯỚC middleware auth
+router.route('/trigger').get(cronController.triggerAllJobs);
+
+// All other routes require authentication
 router.use(auth('manageExchangeRates'));
 
 // Cron job management
@@ -18,9 +21,6 @@ router.route('/status').get(cronController.getJobStatus);
 router.route('/trigger/priority').post(cronController.triggerPriorityCurrencies);
 
 router.route('/trigger/smart').post(cronController.triggerSmartCrawl);
-
-// External cron service endpoint (no auth required)
-router.route('/trigger').get(cronController.triggerAllJobs);
 
 // Specific job control
 router.route('/start/:jobName').post(cronController.startSpecificJob);
