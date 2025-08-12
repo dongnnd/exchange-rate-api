@@ -759,12 +759,16 @@ async function seedCurrencies() {
     logger.info('Preparing currency data with flags and multilingual names...');
     const currenciesToSeed = await prepareCurrencyData();
 
-    // Xoá dữ liệu exchange_rates trước để tránh foreign key constraint
-    logger.info('Deleting all existing exchange rates...');
-    await ExchangeRate.destroy({
-      where: {},
-    });
-    logger.info('All existing exchange rates have been deleted.');
+    // Xoá dữ liệu exchange_rates trước để tránh foreign key constraint (nếu bảng tồn tại)
+    try {
+      logger.info('Checking if exchange_rates table exists...');
+      await ExchangeRate.destroy({
+        where: {},
+      });
+      logger.info('All existing exchange rates have been deleted.');
+    } catch (error) {
+      logger.info('Exchange_rates table does not exist yet, skipping deletion.');
+    }
 
     // Xoá toàn bộ dữ liệu cũ trong bảng currencies
     logger.info('Deleting all existing currencies...');
