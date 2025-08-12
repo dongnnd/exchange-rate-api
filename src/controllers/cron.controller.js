@@ -41,6 +41,28 @@ const triggerSmartCrawl = catchAsync(async (req, res) => {
   });
 });
 
+const triggerAllJobs = catchAsync(async (req, res) => {
+  try {
+    // Trigger priority currencies crawl
+    const priorityResults = await cronService.triggerPriorityCurrencies();
+    
+    // Trigger smart crawl
+    const smartResults = await cronService.triggerSmartCrawl(30);
+    
+    res.status(httpStatus.OK).json({
+      message: 'All cron jobs triggered successfully',
+      timestamp: new Date().toISOString(),
+      priority: priorityResults,
+      smart: smartResults,
+    });
+  } catch (error) {
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+      message: 'Failed to trigger cron jobs',
+      error: error.message,
+    });
+  }
+});
+
 const startSpecificJob = catchAsync(async (req, res) => {
   const { jobName } = req.params;
 
@@ -82,6 +104,7 @@ module.exports = {
   getJobStatus,
   triggerPriorityCurrencies,
   triggerSmartCrawl,
+  triggerAllJobs,
   startSpecificJob,
   stopSpecificJob,
 };

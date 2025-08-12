@@ -19,6 +19,9 @@ router.route('/trigger/priority').post(cronController.triggerPriorityCurrencies)
 
 router.route('/trigger/smart').post(cronController.triggerSmartCrawl);
 
+// External cron service endpoint (no auth required)
+router.route('/trigger').get(cronController.triggerAllJobs);
+
 // Specific job control
 router.route('/start/:jobName').post(cronController.startSpecificJob);
 
