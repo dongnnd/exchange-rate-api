@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
   try {
     // Test config loading
     const config = require('../src/config/config');
-    
+
     res.status(200).json({
       message: 'Config loaded successfully!',
       timestamp: new Date().toISOString(),
@@ -19,13 +19,13 @@ module.exports = async (req, res) => {
       config: {
         env: config.env,
         postgresUrl: config.postgres.url ? 'Set' : 'Not set',
-        jwtSecret: config.jwt.secret ? 'Set' : 'Not set'
+        jwtSecret: config.jwt.secret ? 'Set' : 'Not set',
       },
       envVars: {
         NODE_ENV: process.env.NODE_ENV || 'Not set',
         POSTGRES_URL: process.env.POSTGRES_URL ? 'Set' : 'Not set',
-        JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'Not set'
-      }
+        JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'Not set',
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -36,8 +36,8 @@ module.exports = async (req, res) => {
       envVars: {
         NODE_ENV: process.env.NODE_ENV || 'Not set',
         POSTGRES_URL: process.env.POSTGRES_URL ? 'Set' : 'Not set',
-        JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'Not set'
-      }
+        JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'Not set',
+      },
     });
   }
 };

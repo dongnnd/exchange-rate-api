@@ -53,13 +53,13 @@ const triggerAllJobs = catchAsync(async (req, res) => {
 
     // Trigger priority currencies crawl
     const priorityResults = await cronService.triggerPriorityCurrencies();
-    
+
     // Trigger smart crawl
     const smartResults = await cronService.triggerSmartCrawl(30);
-    
+
     // Clear timeout if successful
     clearTimeout(timeout);
-    
+
     res.status(httpStatus.OK).json({
       message: 'All cron jobs triggered successfully',
       timestamp: new Date().toISOString(),

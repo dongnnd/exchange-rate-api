@@ -12,6 +12,6 @@ module.exports = async (req, res) => {
     message: 'API is working!',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    pg_installed: typeof require('pg') !== 'undefined'
+    pg_installed: typeof require('pg') !== 'undefined',
   });
 };
