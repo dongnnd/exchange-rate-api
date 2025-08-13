@@ -109,6 +109,15 @@ const stopSpecificJob = catchAsync(async (req, res) => {
   });
 });
 
+// Legacy function for backward compatibility
+const startCronJobs = catchAsync(async (req, res) => {
+  cronService.crawlAllCurrencies();
+  res.status(httpStatus.OK).json({
+    message: 'All cron jobs started successfully',
+    // status: cronService.getJobStatus(), // Temporarily commented out
+  });
+});
+
 module.exports = {
   startAllJobs,
   stopAllJobs,
@@ -118,4 +127,5 @@ module.exports = {
   triggerAllJobs,
   startSpecificJob,
   stopSpecificJob,
+  startCronJobs, // Legacy function
 };

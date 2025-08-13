@@ -11,9 +11,9 @@ class CronService {
   }
 
   /**
-   * Start priority currencies crawl job (every 5 minutes)
+   * Start priority currencies crawl job (every 30 minutes)
    */
-  async startAllCurrenciesJob() {
+  async startPriorityCurrenciesJob() {
     const job = cron.schedule(
       '*/30 * * * *',
       async () => {
@@ -36,13 +36,64 @@ class CronService {
   }
 
   /**
+   * Start smart crawl job (every hour)
+   */
+  async startSmartCrawlJob() {
+    const job = cron.schedule(
+      '0 * * * *',
+      async () => {
+        try {
+          logger.info('Starting smart crawl job');
+          const results = await crawlerService.triggerSmartCrawl(30);
+          logger.info(`Smart crawl completed: ${results.length} rates updated`);
+        } catch (error) {
+          logger.error('Error in smart crawl job:', error);
+        }
+      },
+      {
+        scheduled: false,
+      }
+    );
+
+    this.jobs.set('smartCrawl', job);
+    job.start();
+    logger.info('Smart crawl job started');
+  }
+
+  /**
+   * Start batch crawl job (every 6 hours)
+   */
+  async startBatchCrawlJob() {
+    const job = cron.schedule(
+      '0 */6 * * *',
+      async () => {
+        try {
+          logger.info('Starting batch crawl job');
+          const results = await crawlerService.crawlBatches();
+          logger.info(`Batch crawl completed: ${results.length} rates updated`);
+        } catch (error) {
+          logger.error('Error in batch crawl job:', error);
+        }
+      },
+      {
+        scheduled: false,
+      }
+    );
+
+    this.jobs.set('batchCrawl', job);
+    job.start();
+    logger.info('Batch crawl job started');
+  }
+
+  /**
    * Start all cron jobs
    */
-  // eslint-disable-next-line class-methods-use-this
   startAllJobs() {
     try {
       logger.info('Starting all cron jobs...');
-      this.startAllCurrenciesJob();
+      this.startPriorityCurrenciesJob();
+      this.startSmartCrawlJob();
+      this.startBatchCrawlJob();
       logger.info('All cron jobs started successfully');
     } catch (error) {
       logger.error('Error starting cron jobs:', error);
@@ -51,47 +102,21 @@ class CronService {
   }
 
   /**
-   * Trigger priority currencies crawl manually
+   * Stop all cron jobs
    */
-  async triggerPriorityCurrencies() {
+  stopAllJobs() {
     try {
-      logger.info('Triggering priority currencies crawl manually');
-      const results = await crawlerService.crawlAllCurrencies();
-      logger.info(`Priority currencies crawl completed: ${results.length} rates updated`);
-      return results;
+      logger.info('Stopping all cron jobs...');
+      this.jobs.forEach((job, name) => {
+        job.stop();
+        logger.info(`Stopped job: ${name}`);
+      });
+      this.jobs.clear();
+      logger.info('All cron jobs stopped successfully');
     } catch (error) {
-      logger.error('Error in priority currencies crawl:', error);
+      logger.error('Error stopping cron jobs:', error);
       throw error;
     }
-  }
-
-  /**
-   * Trigger smart crawl manually
-   */
-  async triggerSmartCrawl(maxAgeMinutes = 30) {
-    try {
-      logger.info(`Triggering smart crawl with maxAgeMinutes: ${maxAgeMinutes}`);
-      const results = await crawlerService.crawlAllCurrencies();
-      logger.info(`Smart crawl completed: ${results.length} rates updated`);
-      return results;
-    } catch (error) {
-      logger.error('Error in smart crawl:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get job status
-   */
-  getJobStatus() {
-    const status = {};
-    for (const [jobName, job] of this.jobs) {
-      status[jobName] = {
-        running: job.running,
-        nextDate: job.nextDate(),
-      };
-    }
-    return status;
   }
 
   /**
@@ -101,18 +126,33 @@ class CronService {
     const job = this.jobs.get(jobName);
     if (job) {
       job.stop();
-      logger.info(`Job ${jobName} stopped`);
+      this.jobs.delete(jobName);
+      logger.info(`Stopped job: ${jobName}`);
+    } else {
+      logger.warn(`Job not found: ${jobName}`);
     }
   }
 
   /**
-   * Stop all jobs
+   * Get job status
    */
-  stopAllJobs() {
-    for (const [jobName, job] of this.jobs) {
-      job.stop();
-      logger.info(`Job ${jobName} stopped`);
-    }
+  getJobStatus() {
+    const status = {};
+    this.jobs.forEach((job, name) => {
+      status[name] = {
+        running: job.running,
+        scheduled: job.scheduled,
+      };
+    });
+    return status;
+  }
+
+  // Legacy function for backward compatibility
+  // eslint-disable-next-line class-methods-use-this
+  async crawlAllCurrencies() {
+    const results = await crawlerService.crawlAllCurrencies();
+    logger.info(`Priority currencies crawl completed: ${results.length} rates updated`);
+    return results;
   }
 }
 

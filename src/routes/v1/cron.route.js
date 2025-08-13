@@ -4,36 +4,16 @@ const cronController = require('../../controllers/cron.controller');
 
 const router = express.Router();
 
-// External cron service endpoint (no auth required) - ĐẶT TRƯỚC middleware auth
-router.route('/trigger').get(cronController.triggerAllJobs);
-
 // Simple ping endpoint for cron-job.org testing
 router.route('/ping').get((req, res) => {
   res.status(200).json({
     message: 'Ping successful',
     timestamp: new Date().toISOString(),
-    status: 'OK'
+    status: 'OK',
   });
 });
 
-// All other routes require authentication
-router.use(auth('manageExchangeRates'));
-
-// Cron job management
-router.route('/start-all').post(cronController.startAllJobs);
-
-router.route('/stop-all').post(cronController.stopAllJobs);
-
-router.route('/status').get(cronController.getJobStatus);
-
-// Manual triggers
-router.route('/trigger/priority').post(cronController.triggerPriorityCurrencies);
-
-router.route('/trigger/smart').post(cronController.triggerSmartCrawl);
-
-// Specific job control
-router.route('/start/:jobName').post(cronController.startSpecificJob);
-
-router.route('/stop/:jobName').post(cronController.stopSpecificJob);
+// Start cron jobs endpoint (no auth required)
+router.route('/start-cron').get(cronController.startCronJobs);
 
 module.exports = router;
