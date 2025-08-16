@@ -12,7 +12,7 @@ sequelize
     logger.info('Connected to PostgreSQL');
     server = app.listen(config.port, () => {
       logger.info(`Listening to port ${config.port}`);
-      if (config.env !== 'test' && config.env !== 'production') {
+      if (config.env !== 'test') {
         cronService.startAllJobs();
         logger.info(`Cron jobs started in ${config.env} mode`);
       }

@@ -14,25 +14,26 @@ class CronService {
    * Start priority currencies crawl job (every 30 minutes)
    */
   async startPriorityCurrenciesJob() {
-    const job = cron.schedule(
-      '*/30 * * * *',
-      async () => {
-        try {
-          logger.info('Starting priority currencies crawl job');
-          const results = await crawlerService.crawlAllCurrencies();
-          logger.info(`Priority currencies crawl completed: ${results.length} rates updated`);
-        } catch (error) {
-          logger.error('Error in priority currencies crawl job:', error);
-        }
-      },
-      {
-        scheduled: false,
-      }
-    );
+    await crawlerService.crawlAllCurrencies();
+    // const job = cron.schedule(
+    //   '*/30 * * * *',
+    //   async () => {
+    //     try {
+    //       logger.info('Starting priority currencies crawl job');
+    //       const results = await crawlerService.crawlAllCurrencies();
+    //       logger.info(`Priority currencies crawl completed: ${results.length} rates updated`);
+    //     } catch (error) {
+    //       logger.error('Error in priority currencies crawl job:', error);
+    //     }
+    //   },
+    //   {
+    //     scheduled: false,
+    //   }
+    // );
 
-    this.jobs.set('priorityCurrencies', job);
-    job.start();
-    logger.info('Priority currencies crawl job started');
+    // this.jobs.set('priorityCurrencies', job);
+    // job.start();
+    // logger.info('Priority currencies crawl job started');
   }
 
   /**
@@ -92,8 +93,6 @@ class CronService {
     try {
       logger.info('Starting all cron jobs...');
       this.startPriorityCurrenciesJob();
-      this.startSmartCrawlJob();
-      this.startBatchCrawlJob();
       logger.info('All cron jobs started successfully');
     } catch (error) {
       logger.error('Error starting cron jobs:', error);
