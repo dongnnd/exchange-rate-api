@@ -11,6 +11,12 @@ services:
       - /usr/src/app/node_modules
     ports:
       - "3000:3000"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
     environment:
       # Environment
       - NODE_ENV=production
@@ -39,7 +45,7 @@ services:
       # - EMAIL_FROM=noreply@exchange-rate.com
     depends_on:
       - postgres
-    command: npm start
+    command: node --max-old-space-size=2048 src/index.js
     restart: unless-stopped
 
   postgres:

@@ -757,18 +757,41 @@ async function downloadFlagAsBase64(currencyCode) {
 
 // Chuẩn bị dữ liệu để insert với flag và tên đa ngôn ngữ
 async function prepareCurrencyData() {
-  const currenciesToSeedPromises = currencyCodes.map(async (code) => {
-    const flagData = await downloadFlagAsBase64(code);
-    return {
-      code,
-      name_vi: currencyNamesVi[code] || `Tiền tệ ${code}`,
-      name_en: currencyNamesEn[code] || `${code} Currency`,
-      symbol: code,
-      flag: flagData,
-      isActive: true,
-    };
-  });
-  return Promise.all(currenciesToSeedPromises);
+  const currenciesToSeed = [];
+  const batchSize = 10; // Process 10 currencies at a time
+  const delayBetweenBatches = 2000; // 2 seconds delay between batches
+
+  for (let i = 0; i < currencyCodes.length; i += batchSize) {
+    const batch = currencyCodes.slice(i, i + batchSize);
+    logger.info(
+      `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(currencyCodes.length / batchSize)} (${batch.length
+      } currencies)`
+    );
+
+    // Process batch in parallel
+    const batchPromises = batch.map(async (code) => {
+      const flagData = await downloadFlagAsBase64(code);
+      return {
+        code,
+        name_vi: currencyNamesVi[code] || `Tiền tệ ${code}`,
+        name_en: currencyNamesEn[code] || `${code} Currency`,
+        symbol: code,
+        flag: flagData,
+        isActive: true,
+      };
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    currenciesToSeed.push(...batchResults);
+
+    // Add delay between batches (except for the last batch)
+    if (i + batchSize < currencyCodes.length) {
+      logger.info(`Waiting ${delayBetweenBatches}ms before next batch...`);
+      await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
+    }
+  }
+
+  return currenciesToSeed;
 }
 
 async function seedCurrencies() {
