@@ -698,41 +698,60 @@ const specialCurrencyIcons = {
   XDR: 'PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iNCIgZmlsbD0iIzAwNzJDNyIvPgo8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxMiIgZmlsbD0iI0ZGRkZGRiIvPgo8cGF0aCBkPSJNMjAgMTJMMjQgMjBMMjAgMjhaIiBmaWxsPSIjMDA3MkM3Ii8+CjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjQiIGZpbGw9IiMwMDcyQzciLz4KPC9zdmc+',
 };
 
-// Function to download flag image and convert to base64
+// Function to download flag image and convert to base64 with retry logic
 async function downloadFlagAsBase64(currencyCode) {
-  try {
-    // Check if it's a special currency with predefined icon
-    if (specialCurrencyIcons[currencyCode]) {
-      logger.info(`Using predefined icon for ${currencyCode}`);
-      return specialCurrencyIcons[currencyCode];
+  const maxRetries = 3;
+  const delay = 1000; // 1 second delay between retries
+
+  for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
+    try {
+      // Check if it's a special currency with predefined icon
+      if (specialCurrencyIcons[currencyCode]) {
+        logger.info(`Using predefined icon for ${currencyCode}`);
+        return specialCurrencyIcons[currencyCode];
+      }
+
+      const countryCode = currencyToCountryMap[currencyCode];
+      if (!countryCode) {
+        logger.warn(`No country mapping found for currency: ${currencyCode}`);
+        return null;
+      }
+
+      // Skip special cases that we now handle with predefined icons
+      if (['btc', 'gold', 'imf', 'palladium', 'platinum'].includes(countryCode)) {
+        return null;
+      }
+
+      const flagUrl = `https://flagcdn.com/w40/${countryCode}.png`;
+      logger.info(`Downloading flag for ${currencyCode} from: ${flagUrl} (attempt ${attempt}/${maxRetries})`);
+
+      // eslint-disable-next-line no-await-in-loop
+      const response = await axios.get(flagUrl, {
+        responseType: 'arraybuffer',
+        timeout: 20000, // Increased timeout
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+      });
+
+      const base64 = Buffer.from(response.data, 'binary').toString('base64');
+      logger.info(`Successfully downloaded flag for ${currencyCode}`);
+      return base64;
+    } catch (error) {
+      const countryCode = currencyToCountryMap[currencyCode];
+      logger.error(
+        `Failed to download flag for ${currencyCode} (attempt ${attempt}/${maxRetries}), link: https://flagcdn.com/w40/${countryCode}.png, error: ${error.message}`
+      );
+
+      if (attempt < maxRetries) {
+        logger.info(`Retrying in ${delay}ms...`);
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        logger.error(`Failed to download flag for ${currencyCode} after ${maxRetries} attempts`);
+        return null;
+      }
     }
-
-    const countryCode = currencyToCountryMap[currencyCode];
-    if (!countryCode) {
-      logger.warn(`No country mapping found for currency: ${currencyCode}`);
-      return null;
-    }
-
-    // Skip special cases that we now handle with predefined icons
-    if (['btc', 'gold', 'imf', 'palladium', 'platinum'].includes(countryCode)) {
-      return null;
-    }
-
-    const flagUrl = `https://flagcdn.com/w40/${countryCode}.png`;
-    logger.info(`Downloading flag for ${currencyCode} from: ${flagUrl}`);
-
-    const response = await axios.get(flagUrl, {
-      responseType: 'arraybuffer',
-      timeout: 10000,
-    });
-
-    const base64 = Buffer.from(response.data, 'binary').toString('base64');
-    return base64;
-  } catch (error) {
-    logger.error(
-      `Failed to download flag for ${currencyCode}, link: https://flagcdn.com/w40/${currencyCode}.png', error: ${error.message}`
-    );
-    return null;
   }
 }
 
