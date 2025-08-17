@@ -781,12 +781,14 @@ async function prepareCurrencyData() {
       };
     });
 
+    // eslint-disable-next-line no-await-in-loop
     const batchResults = await Promise.all(batchPromises);
     currenciesToSeed.push(...batchResults);
 
     // Add delay between batches (except for the last batch)
     if (i + batchSize < currencyCodes.length) {
       logger.info(`Waiting ${delayBetweenBatches}ms before next batch...`);
+      // eslint-disable-next-line no-await-in-loop
       await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
     }
   }
