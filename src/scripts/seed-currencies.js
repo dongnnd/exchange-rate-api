@@ -729,7 +729,9 @@ async function downloadFlagAsBase64(currencyCode) {
     const base64 = Buffer.from(response.data, 'binary').toString('base64');
     return base64;
   } catch (error) {
-    logger.error(`Failed to download flag for ${currencyCode}:`, error.message);
+    logger.error(
+      `Failed to download flag for ${currencyCode}, link: https://flagcdn.com/w40/${currencyCode}.png', error: ${error.message}`
+    );
     return null;
   }
 }
