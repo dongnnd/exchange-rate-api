@@ -1,6 +1,18 @@
 const httpStatus = require('http-status');
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const { ExchangeRate, Currency } = require('../../models/sequelize');
 const ApiError = require('../../utils/ApiError');
+
+function toVietnamTime(date) {
+  if (!date) return null;
+  return dayjs(date).tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY HH:mm:ss');
+}
 
 /**
  * Get latest exchange rate
@@ -30,6 +42,7 @@ const getLatestRate = async (fromCurrencyCode, toCurrencyCode) => {
     rate: parseFloat(exchangeRate.rate),
     from_currency_code: fromCurrency.code,
     to_currency_code: toCurrency.code,
+    updated_at: toVietnamTime(exchangeRate.updatedAt),
   };
 };
 
