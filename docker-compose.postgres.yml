@@ -21,7 +21,10 @@ services:
       # Environment
       - NODE_ENV=production
       - PORT=3000
-      
+
+      # Auto initialize database on first run (set to false to disable)
+      - AUTO_INIT=true
+
       # PostgreSQL Configuration
       - POSTGRES_URL=postgresql://postgres:postgres123@postgres:5432/exchange_rate_db
       - POSTGRES_HOST=postgres
@@ -29,14 +32,14 @@ services:
       - POSTGRES_DATABASE=exchange_rate_db
       - POSTGRES_USERNAME=postgres
       - POSTGRES_PASSWORD=postgres123
-      
+
       # JWT Configuration
       - JWT_SECRET=exchange_rate_api_jwt_secret_2024_very_long_and_secure_key_for_production
       - JWT_ACCESS_EXPIRATION_MINUTES=30
       - JWT_REFRESH_EXPIRATION_DAYS=30
       - JWT_RESET_PASSWORD_EXPIRATION_MINUTES=10
       - JWT_VERIFY_EMAIL_EXPIRATION_MINUTES=10
-      
+
       # Email Configuration (optional)
       # - SMTP_HOST=smtp.gmail.com
       # - SMTP_PORT=587
